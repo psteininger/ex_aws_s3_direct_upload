@@ -1,16 +1,17 @@
-defmodule S3DirectUploadTest do
+defmodule ExAws.S3.DirectUploadTest do
   use ExUnit.Case
-  doctest S3DirectUpload
+  doctest ExAws.S3.DirectUpload
 
   import Map, only: [get: 2]
 
   test "presigned_json" do
-    upload = %S3DirectUpload{
+    upload = %ExAws.S3.DirectUpload{
       file_name: "file.jpg",
       mimetype: "image/jpeg",
-      path: "path/in/bucket"
+      path: "path/in/bucket",
+      bucket: "s3-bucket"
     }
-    result = S3DirectUpload.presigned_json(upload) |> Poison.decode!
+    result = ExAws.S3.DirectUpload.presigned_json(upload) |> Poison.decode!
     assert result |> get("url") == "https://s3-bucket.s3.amazonaws.com"
     credentials = result |> get("credentials")
     assert credentials |> get("acl") == "public-read"

@@ -1,22 +1,31 @@
-defmodule S3DirectUpload.DateUtil do
+defmodule ExAws.S3.DirectUpload.StaticDateUtil do
 
   @moduledoc false
 
   def today_datetime do
-    %{DateTime.utc_now | hour: 0, minute: 0, second: 0, microsecond: {0,0}}
+    static_datetime()
     |> DateTime.to_iso8601(:basic)
   end
 
   def today_date do
-    Date.utc_today
+    static_date()
     |> Date.to_iso8601(:basic)
   end
 
   def expiration_datetime do
-    DateTime.utc_now()
+    static_datetime()
     |> DateTime.to_unix()
     |> Kernel.+(60 * 60)
     |> DateTime.from_unix!()
     |> DateTime.to_iso8601()
+  end
+
+  defp static_datetime do
+    ~N[2017-01-01 00:00:00]
+    |> DateTime.from_naive!("Etc/UTC")
+  end
+
+  defp static_date do
+    ~D[2017-01-01]
   end
 end

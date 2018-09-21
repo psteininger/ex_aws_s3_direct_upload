@@ -1,4 +1,4 @@
-defmodule S3DirectUpload do
+defmodule ExAws.S3.DirectUpload do
   @moduledoc """
 
   Pre-signed S3 upload helper for client-side multipart POSTs.
@@ -16,7 +16,7 @@ defmodule S3DirectUpload do
   environment variables. Add your own configuration to `config.exs`.
 
   ```
-  config :s3_direct_upload,
+  config :direct_upload,
     aws_access_key: System.get_env("AWS_ACCESS_KEY_ID"),
     aws_secret_key: System.get_env("AWS_SECRET_ACCESS_KEY"),
     aws_s3_bucket: System.get_env("AWS_S3_BUCKET"),
@@ -41,9 +41,9 @@ defmodule S3DirectUpload do
   - `acl` defaults to `public-read`
 
   """
-  defstruct file_name: nil, mimetype: nil, path: nil, acl: "public-read"
+  defstruct file_name: nil, mimetype: nil, path: nil, acl: "public-read", bucket: nil
 
-  @date_util Application.get_env(:s3_direct_upload, :date_util, S3DirectUpload.DateUtil)
+  @date_util Application.get_env(:ex_aws, :s3_direct_upload_date_util, ExAws.S3.DirectUpload.DateUtil)
 
   @doc """
 
@@ -54,25 +54,25 @@ defmodule S3DirectUpload do
 
   ## Examples
 
-      iex> %S3DirectUpload{file_name: "image.jpg", mimetype: "image/jpeg", path: "path/to/file"}
-      ...> |> S3DirectUpload.presigned
+      iex> %ExAws.S3.DirectUpload{file_name: "image.jpg", mimetype: "image/jpeg", path: "path/to/file", bucket: "s3-bucket"}
+      ...> |> ExAws.S3.DirectUpload.presigned
       ...> |> Map.get(:url)
       "https://s3-bucket.s3.amazonaws.com"
 
-      iex> %S3DirectUpload{file_name: "image.jpg", mimetype: "image/jpeg", path: "path/to/file"}
-      ...> |> S3DirectUpload.presigned
+      iex> %ExAws.S3.DirectUpload{file_name: "image.jpg", mimetype: "image/jpeg", path: "path/to/file", bucket: "s3-bucket"}
+      ...> |> ExAws.S3.DirectUpload.presigned
       ...> |> Map.get(:credentials) |> Map.get(:"x-amz-credential")
       "123abc/20170101/us-east-1/s3/aws4_request"
 
-      iex> %S3DirectUpload{file_name: "image.jpg", mimetype: "image/jpeg", path: "path/to/file"}
-      ...> |> S3DirectUpload.presigned
+      iex> %ExAws.S3.DirectUpload{file_name: "image.jpg", mimetype: "image/jpeg", path: "path/to/file", bucket: "s3-bucket"}
+      ...> |> ExAws.S3.DirectUpload.presigned
       ...> |> Map.get(:credentials) |> Map.get(:key)
       "path/to/file/image.jpg"
 
   """
-  def presigned(%S3DirectUpload{} = upload) do
+  def presigned(%ExAws.S3.DirectUpload{} = upload) do
     %{
-      url: "https://#{bucket()}.s3.amazonaws.com",
+      url: "https://#{upload.bucket}.s3.amazonaws.com",
       credentials: %{
         policy: policy(upload),
         "x-amz-algorithm": "AWS4-HMAC-SHA256",
@@ -93,7 +93,7 @@ defmodule S3DirectUpload do
   - `credentials` - name/value pairs for hidden input fields
 
   """
-  def presigned_json(%S3DirectUpload{} = upload) do
+  def presigned_json(%ExAws.S3.DirectUpload{} = upload) do
     presigned(upload)
     |> Poison.encode!
   end
@@ -123,7 +123,7 @@ defmodule S3DirectUpload do
 
   defp conditions(upload) do
     [
-      %{"bucket" => bucket()},
+      %{"bucket" => upload.bucket},
       %{"acl" => upload.acl},
       %{"x-amz-algorithm": "AWS4-HMAC-SHA256"},
       %{"x-amz-credential": credential()},
@@ -145,8 +145,16 @@ defmodule S3DirectUpload do
     :crypto.hmac(:sha256, key, data)
   end
 
-  defp access_key, do: Application.get_env(:s3_direct_upload, :aws_access_key)
-  defp secret_key, do: Application.get_env(:s3_direct_upload, :aws_secret_key)
-  defp bucket, do: Application.get_env(:s3_direct_upload, :aws_s3_bucket)
-  defp region, do: Application.get_env(:s3_direct_upload, :aws_region) || "us-east-1"
+  defp access_key do
+    ExAws.Config.new(:s3) |> Map.get(:access_key_id)
+  end
+
+  defp secret_key do
+    ExAws.Config.new(:s3) |> Map.get(:secret_access_key)
+  end
+
+    defp region do
+    ExAws.Config.new(:s3) |> Map.get(:region)
+  end
+
 end

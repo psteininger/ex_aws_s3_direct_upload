@@ -1,4 +1,4 @@
-Copyright 2017 Andrew Kappen
+Copyright 2017 Andrew Kappen (original s3_direct_upload), 2018 Piotr Steininger (rework to use ExAws)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
