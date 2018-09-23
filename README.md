@@ -19,7 +19,7 @@ list of dependencies in `mix.exs` and then running `mix deps.get`:
 
 ```elixir
 def deps do
-  [{:ex_aws_s3_direct_upload, "~> 1.0.0"}]
+  [{:ex_aws_s3_direct_upload, "~> 1.0.1"}]
 end
 ```
 

@@ -1,7 +1,8 @@
 defmodule ExAws.S3.DirectUpload do
   @moduledoc """
 
-  Pre-signed S3 upload helper for client-side multipart POSTs.
+  Pre-signed S3 upload helper for client-side multipart POSTs, with support for using AWS Instance Roles,
+  which produce temporary credentials. This approach reduces the number of ENV variables to pass, among other benefits.
 
   See:
 
@@ -9,19 +10,15 @@ defmodule ExAws.S3.DirectUpload do
 
   [Task 3: Calculate the Signature for AWS Signature Version 4](http://docs.aws.amazon.com/general/latest/gr/sigv4-calculate-signature.html)
 
-  This module expects three application configuration settings for the
-  AWS access and secret keys and the S3 bucket name. You may also
-  supply an AWS region (the default if you do not is
-  `us-east-1`). Here is an example configuration that reads these from
-  environment variables. Add your own configuration to `config.exs`.
+  This module does not require any further configuration other than the default already in place, when using `ex_aws` or `ex_aws_s3`.
+  The default configuration is as follows:
 
+  ```elixir
+    config :ex_aws,
+    access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role],
+    secret_access_key: [{:system, "AWS_SECRET_ACCESS_KEY"}, :instance_role]
   ```
-  config :direct_upload,
-    aws_access_key: System.get_env("AWS_ACCESS_KEY_ID"),
-    aws_secret_key: System.get_env("AWS_SECRET_ACCESS_KEY"),
-    aws_s3_bucket: System.get_env("AWS_S3_BUCKET"),
-    aws_region: System.get_env("AWS_REGION")
-  ```
+  The Authentication Resolver will look for credentials in ENV variables, and fall back to Instance Role.
 
   """
 
@@ -35,6 +32,7 @@ defmodule ExAws.S3.DirectUpload do
   - `file_name` the name of the file being uploaded
   - `mimetype` the mimetype of the file being uploaded
   - `path` the path where the file will be uploaded in the bucket
+  - `bucket` the name of the bucket to which to upload the file
 
   Fields that can be over-ridden are:
 

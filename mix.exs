@@ -4,7 +4,7 @@ defmodule ExAws.S3.DirectUpload.Mixfile do
   def project do
     [
       app: :ex_aws_s3_direct_upload,
-      version: "1.0.0",
+      version: "1.0.1",
       elixir: "~> 1.4",
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
@@ -27,7 +27,7 @@ defmodule ExAws.S3.DirectUpload.Mixfile do
       {:ex_aws_s3, "~> 2.0.1"},
       {:hackney, "~> 1.9"},
       {:sweet_xml, "~> 0.6"},
-      {:ex_doc, "~> 0.18", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false}
     ]
   end
 
@@ -41,7 +41,6 @@ defmodule ExAws.S3.DirectUpload.Mixfile do
     [
       name: :ex_aws_s3_direct_upload,
       files: ["lib", "mix.exs", "README*", "LICENSE*"],
-      organization: "LaborVoices",
       authors: ["Andrew Kappen", "Piotr Steininger"],
       maintainers: ["Piotr Steininger"],
       licenses: ["Apache 2.0"],

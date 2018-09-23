@@ -1,6 +1,8 @@
 defmodule ExAws.S3.DirectUpload.DateUtil do
 
-  @moduledoc false
+  @moduledoc """
+
+  """
 
   def today_datetime do
     %{DateTime.utc_now | hour: 0, minute: 0, second: 0, microsecond: {0,0}}
