@@ -55,7 +55,7 @@ defmodule ExAws.S3.DirectUpload do
       iex> %ExAws.S3.DirectUpload{file_name: "image.jpg", mimetype: "image/jpeg", path: "path/to/file", bucket: "s3-bucket"}
       ...> |> ExAws.S3.DirectUpload.presigned
       ...> |> Map.get(:url)
-      "https://s3-bucket.s3.amazonaws.com"
+      "https://s3-bucket.s3.us-east-1.amazonaws.com"
 
       iex> %ExAws.S3.DirectUpload{file_name: "image.jpg", mimetype: "image/jpeg", path: "path/to/file", bucket: "s3-bucket"}
       ...> |> ExAws.S3.DirectUpload.presigned
@@ -70,7 +70,7 @@ defmodule ExAws.S3.DirectUpload do
   """
   def presigned(%ExAws.S3.DirectUpload{} = upload) do
     %{
-      url: "https://#{upload.bucket}.s3.amazonaws.com",
+      url: url(upload),
       credentials: %{
         policy: policy(upload),
         "x-amz-algorithm": "AWS4-HMAC-SHA256",
@@ -131,6 +131,10 @@ defmodule ExAws.S3.DirectUpload do
     ]
   end
 
+  defp url(%ExAws.S3.DirectUpload{bucket: bucket}) do
+    "https://#{bucket}.s3.#{region()}.amazonaws.com"
+  end
+
   defp credential() do
     "#{access_key()}/#{@date_util.today_date()}/#{region()}/s3/aws4_request"
   end
@@ -151,7 +155,7 @@ defmodule ExAws.S3.DirectUpload do
     ExAws.Config.new(:s3) |> Map.get(:secret_access_key)
   end
 
-    defp region do
+  defp region do
     ExAws.Config.new(:s3) |> Map.get(:region)
   end
 

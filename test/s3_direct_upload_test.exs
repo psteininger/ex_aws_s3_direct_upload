@@ -12,7 +12,7 @@ defmodule ExAws.S3.DirectUploadTest do
       bucket: "s3-bucket"
     }
     result = ExAws.S3.DirectUpload.presigned_json(upload) |> Poison.decode!
-    assert result |> get("url") == "https://s3-bucket.s3.amazonaws.com"
+    assert result |> get("url") == "https://s3-bucket.s3.us-east-1.amazonaws.com"
     credentials = result |> get("credentials")
     assert credentials |> get("acl") == "public-read"
     assert credentials |> get("key") == "path/in/bucket/file.jpg"
