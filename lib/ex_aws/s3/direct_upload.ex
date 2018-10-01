@@ -98,9 +98,9 @@ defmodule ExAws.S3.DirectUpload do
       acl: upload.acl,
       key: file_path(upload)
     }
-    unless security_token() == nil do
-      credentials
-      |> Map.put(:"x-amz-security-token", security_token())
+    credentials = case security_token() do
+      nil -> credentials
+      _ -> credentials |> Map.put(:"x-amz-security-token", security_token())
     end
     credentials
   end

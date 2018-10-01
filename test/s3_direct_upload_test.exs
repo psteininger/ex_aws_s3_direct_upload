@@ -6,12 +6,8 @@ defmodule ExAws.S3.DirectUploadTest do
   import Map, only: [get: 2]
 
   test "presigned_json" do
-    upload = %ExAws.S3.DirectUpload{
-      file_name: "file.jpg",
-      mimetype: "image/jpeg",
-      path: "path/in/bucket",
-      bucket: "s3-bucket"
-    }
+    Mix.Config.read!("config/test.exs") |> Mix.Config.persist
+    upload = %ExAws.S3.DirectUpload{ file_name: "file.jpg", mimetype: "image/jpeg", path: "path/in/bucket", bucket: "s3-bucket" }
     result = ExAws.S3.DirectUpload.presigned_json(upload) |> Poison.decode!
     assert result |> get("url") == "https://s3-bucket.s3.us-east-1.amazonaws.com"
     credentials = result |> get("credentials")
@@ -42,5 +38,6 @@ defmodule ExAws.S3.DirectUploadTest do
     assert credentials |> get("x-amz-credential") == "123abc/20170101/us-east-1/s3/aws4_request"
     assert credentials |> get("x-amz-date") == "20170101T000000Z"
     assert credentials |> get("x-amz-signature") == "d7937612e613b453f4deee7b8c6f832f1f0c5a194b56d3a781bce3b9acb965ce"
+    assert credentials |> get("x-amz-security-token") == Application.get_env(:ex_aws, :security_token)
   end
 end
