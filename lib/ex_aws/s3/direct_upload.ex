@@ -71,15 +71,7 @@ defmodule ExAws.S3.DirectUpload do
   def presigned(%ExAws.S3.DirectUpload{} = upload) do
     %{
       url: url(upload),
-      credentials: %{
-        policy: policy(upload),
-        "x-amz-algorithm": "AWS4-HMAC-SHA256",
-        "x-amz-credential": credential(),
-        "x-amz-date": @date_util.today_datetime(),
-        "x-amz-signature": signature(upload),
-        acl: upload.acl,
-        key: file_path(upload)
-      }
+      credentials: credentials(upload)
     }
   end
 
@@ -96,7 +88,24 @@ defmodule ExAws.S3.DirectUpload do
     |> Poison.encode!
   end
 
-  defp signature(upload) do
+  defp credentials(%ExAws.S3.DirectUpload{} = upload) do
+    credentials = %{
+      policy: policy(upload),
+      "x-amz-algorithm": "AWS4-HMAC-SHA256",
+      "x-amz-credential": credential(),
+      "x-amz-date": @date_util.today_datetime(),
+      "x-amz-signature": signature(upload),
+      acl: upload.acl,
+      key: file_path(upload)
+    }
+    unless security_token() == nil do
+      credentials
+      |> Map.put(:"x-amz-security-token", security_token())
+    end
+    credentials
+  end
+
+  defp signature(%ExAws.S3.DirectUpload{} = upload) do
     signing_key()
     |> hmac(policy(upload))
     |> Base.encode16(case: :lower)
@@ -110,7 +119,7 @@ defmodule ExAws.S3.DirectUpload do
     |> hmac("aws4_request")
   end
 
-  defp policy(upload) do
+  defp policy(%ExAws.S3.DirectUpload{} = upload) do
     %{
       expiration: @date_util.expiration_datetime,
       conditions: conditions(upload)
@@ -119,8 +128,8 @@ defmodule ExAws.S3.DirectUpload do
     |> Base.encode64
   end
 
-  defp conditions(upload) do
-    [
+  defp conditions(%ExAws.S3.DirectUpload{} = upload) do
+    conditions = [
       %{"bucket" => upload.bucket},
       %{"acl" => upload.acl},
       %{"x-amz-algorithm": "AWS4-HMAC-SHA256"},
@@ -129,6 +138,11 @@ defmodule ExAws.S3.DirectUpload do
       ["starts-with", "$Content-Type", upload.mimetype],
       ["starts-with", "$key", upload.path]
     ]
+    conditions = case security_token() do
+      nil -> conditions
+      _ -> [%{"x-amz-security-token" => security_token()} | conditions]
+    end
+    conditions
   end
 
   defp url(%ExAws.S3.DirectUpload{bucket: bucket}) do
@@ -147,16 +161,24 @@ defmodule ExAws.S3.DirectUpload do
     :crypto.hmac(:sha256, key, data)
   end
 
+  defp security_token do
+    ExAws.Config.new(:s3)
+    |> Map.get(:security_token)
+  end
+
   defp access_key do
-    ExAws.Config.new(:s3) |> Map.get(:access_key_id)
+    ExAws.Config.new(:s3)
+    |> Map.get(:access_key_id)
   end
 
   defp secret_key do
-    ExAws.Config.new(:s3) |> Map.get(:secret_access_key)
+    ExAws.Config.new(:s3)
+    |> Map.get(:secret_access_key)
   end
 
   defp region do
-    ExAws.Config.new(:s3) |> Map.get(:region)
+    ExAws.Config.new(:s3)
+    |> Map.get(:region)
   end
 
 end
