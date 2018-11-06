@@ -68,10 +68,10 @@ defmodule ExAws.S3.DirectUpload do
       "path/to/file/image.jpg"
 
   """
-  def presigned(%ExAws.S3.DirectUpload{} = upload) do
+  def presigned(%ExAws.S3.DirectUpload{} = upload, config \\ []) do
     %{
-      url: url(upload),
-      credentials: credentials(upload)
+      url: url(upload, config),
+      credentials: credentials(upload, config)
     }
   end
 
@@ -83,74 +83,74 @@ defmodule ExAws.S3.DirectUpload do
   - `credentials` - name/value pairs for hidden input fields
 
   """
-  def presigned_json(%ExAws.S3.DirectUpload{} = upload) do
-    presigned(upload)
+  def presigned_json(%ExAws.S3.DirectUpload{} = upload, config \\ []) do
+    presigned(upload, config)
     |> Poison.encode!
   end
 
-  defp credentials(%ExAws.S3.DirectUpload{} = upload) do
+  defp credentials(%ExAws.S3.DirectUpload{} = upload, config) do
     credentials = %{
-      policy: policy(upload),
+      policy: policy(upload, config),
       "x-amz-algorithm": "AWS4-HMAC-SHA256",
-      "x-amz-credential": credential(),
+      "x-amz-credential": credential(config),
       "x-amz-date": @date_util.today_datetime(),
-      "x-amz-signature": signature(upload),
+      "x-amz-signature": signature(upload, config),
       acl: upload.acl,
       key: file_path(upload)
     }
-    credentials = case security_token() do
+    credentials = case security_token(config) do
       nil -> credentials
-      _ -> credentials |> Map.put(:"x-amz-security-token", security_token())
+      _ -> credentials |> Map.put(:"x-amz-security-token", security_token(config))
     end
     credentials
   end
 
-  defp signature(%ExAws.S3.DirectUpload{} = upload) do
-    signing_key()
-    |> hmac(policy(upload))
+  defp signature(%ExAws.S3.DirectUpload{} = upload, config) do
+    signing_key(config)
+    |> hmac(policy(upload, config))
     |> Base.encode16(case: :lower)
   end
 
-  defp signing_key do
-    "AWS4#{secret_key()}"
+  defp signing_key(config) do
+    "AWS4#{secret_key(config)}"
     |> hmac(@date_util.today_date())
-    |> hmac(region())
+    |> hmac(region(config))
     |> hmac("s3")
     |> hmac("aws4_request")
   end
 
-  defp policy(%ExAws.S3.DirectUpload{} = upload) do
+  defp policy(%ExAws.S3.DirectUpload{} = upload, config) do
     %{
       expiration: @date_util.expiration_datetime,
-      conditions: conditions(upload)
+      conditions: conditions(upload, config)
     }
     |> Poison.encode!
     |> Base.encode64
   end
 
-  defp conditions(%ExAws.S3.DirectUpload{} = upload) do
+  defp conditions(%ExAws.S3.DirectUpload{} = upload, config) do
     conditions = [
       %{"bucket" => upload.bucket},
       %{"acl" => upload.acl},
       %{"x-amz-algorithm": "AWS4-HMAC-SHA256"},
-      %{"x-amz-credential": credential()},
+      %{"x-amz-credential": credential(config)},
       %{"x-amz-date": @date_util.today_datetime()},
       ["starts-with", "$Content-Type", upload.mimetype],
       ["starts-with", "$key", upload.path]
     ]
-    conditions = case security_token() do
+    conditions = case security_token(config) do
       nil -> conditions
-      _ -> [%{"x-amz-security-token" => security_token()} | conditions]
+      _ -> [%{"x-amz-security-token" => security_token(config)} | conditions]
     end
     conditions
   end
 
-  defp url(%ExAws.S3.DirectUpload{bucket: bucket}) do
-    "https://#{bucket}.s3.#{region()}.amazonaws.com"
+  defp url(%ExAws.S3.DirectUpload{bucket: bucket}, config) do
+    "https://#{bucket}.s3.#{region(config)}.amazonaws.com"
   end
 
-  defp credential() do
-    "#{access_key()}/#{@date_util.today_date()}/#{region()}/s3/aws4_request"
+  defp credential(config) do
+    "#{access_key(config)}/#{@date_util.today_date()}/#{region(config)}/s3/aws4_request"
   end
 
   defp file_path(upload) do
@@ -161,24 +161,23 @@ defmodule ExAws.S3.DirectUpload do
     :crypto.hmac(:sha256, key, data)
   end
 
-  defp security_token do
-    ExAws.Config.new(:s3)
+  defp security_token(config) do
+    ExAws.Config.new(:s3, config)
     |> Map.get(:security_token)
   end
 
-  defp access_key do
-    ExAws.Config.new(:s3)
+  defp access_key(config) do
+    ExAws.Config.new(:s3, config)
     |> Map.get(:access_key_id)
   end
 
-  defp secret_key do
-    ExAws.Config.new(:s3)
+  defp secret_key(config) do
+    ExAws.Config.new(:s3, config)
     |> Map.get(:secret_access_key)
   end
 
-  defp region do
-    ExAws.Config.new(:s3)
+  defp region(config) do
+    ExAws.Config.new(:s3, config)
     |> Map.get(:region)
   end
-
 end
