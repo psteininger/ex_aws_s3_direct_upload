@@ -9,8 +9,9 @@ defmodule ExAws.S3.DirectUploadTest do
     Mix.Config.read!("config/test.exs") |> Mix.Config.persist
     upload = %ExAws.S3.DirectUpload{ file_name: "file.jpg", mimetype: "image/jpeg", path: "path/in/bucket", bucket: "s3-bucket" }
     result = ExAws.S3.DirectUpload.presigned_json(upload) |> Poison.decode!
-    assert result |> get("url") == "https://s3-bucket.s3.us-east-1.amazonaws.com"
+    assert result |> get("url") == "https://s3.us-east-1.amazonaws.com/s3-bucket"
     credentials = result |> get("credentials")
+    assert credentials |> get("content-type") == "image/jpeg"
     assert credentials |> get("acl") == "public-read"
     assert credentials |> get("key") == "path/in/bucket/file.jpg"
     assert credentials |> get("policy") |> String.slice(0..9) == "eyJleHBpcm"
@@ -29,8 +30,9 @@ defmodule ExAws.S3.DirectUploadTest do
       bucket: "s3-bucket"
     }
     result = ExAws.S3.DirectUpload.presigned_json(upload) |> Poison.decode!
-    assert result |> get("url") == "https://s3-bucket.s3.us-east-1.amazonaws.com"
+    assert result |> get("url") == "https://s3.us-east-1.amazonaws.com/s3-bucket"
     credentials = result |> get("credentials")
+    assert credentials |> get("content-type") == "image/jpeg"
     assert credentials |> get("acl") == "public-read"
     assert credentials |> get("key") == "path/in/bucket/file.jpg"
     assert credentials |> get("policy") |> String.slice(0..9) == "eyJleHBpcm"

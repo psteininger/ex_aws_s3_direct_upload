@@ -55,7 +55,7 @@ defmodule ExAws.S3.DirectUpload do
       iex> %ExAws.S3.DirectUpload{file_name: "image.jpg", mimetype: "image/jpeg", path: "path/to/file", bucket: "s3-bucket"}
       ...> |> ExAws.S3.DirectUpload.presigned
       ...> |> Map.get(:url)
-      "https://s3-bucket.s3.us-east-1.amazonaws.com"
+      "https://s3.us-east-1.amazonaws.com/s3-bucket"
 
       iex> %ExAws.S3.DirectUpload{file_name: "image.jpg", mimetype: "image/jpeg", path: "path/to/file", bucket: "s3-bucket"}
       ...> |> ExAws.S3.DirectUpload.presigned
@@ -90,6 +90,7 @@ defmodule ExAws.S3.DirectUpload do
 
   defp credentials(%ExAws.S3.DirectUpload{} = upload) do
     credentials = %{
+      "content-type": upload.mimetype,
       policy: policy(upload),
       "x-amz-algorithm": "AWS4-HMAC-SHA256",
       "x-amz-credential": credential(),
@@ -146,7 +147,7 @@ defmodule ExAws.S3.DirectUpload do
   end
 
   defp url(%ExAws.S3.DirectUpload{bucket: bucket}) do
-    "https://#{bucket}.s3.#{region()}.amazonaws.com"
+    "https://s3.#{region()}.amazonaws.com/#{bucket}"
   end
 
   defp credential() do
