@@ -11,6 +11,6 @@ use Mix.Config
 # Application configuration
 
 # Static test configuration
-if Mix.env == :test do
-  import_config "#{Mix.env}.exs"
+if Mix.env() in ~w(dev test)a do
+  import_config "test.exs"
 end
