@@ -4,16 +4,20 @@ defmodule ExAws.S3.DirectUpload.Mixfile do
   def project do
     [
       app: :ex_aws_s3_direct_upload,
-      version: "1.0.4",
-      elixir: "~> 1.4",
-      build_embedded: Mix.env == :prod,
-      start_permanent: Mix.env == :prod,
-      source_url: "https://github.com/laborvoices/ex_aws_s3_direct_upload",
+      version: "0.0.1",
+      elixir: "~> 1.5",
+      elixirc_paths: elixirc_paths(Mix.env()),
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
+      source_url: "https://github.com/mtarnovan/ex_aws_s3_direct_upload",
       description: description(),
       package: package(),
-      deps: deps(),
+      deps: deps()
     ]
   end
+
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
 
   # Configuration for the OTP application
   def application do
@@ -23,10 +27,8 @@ defmodule ExAws.S3.DirectUpload.Mixfile do
   # Dependencies
   defp deps do
     [
-      {:poison, "~> 2.0 or ~> 3.0"},
-      {:ex_aws_s3, "~> 2.0.1"},
-      {:hackney, "~> 1.9"},
-      {:sweet_xml, "~> 0.6"},
+      {:jason, "~> 1.1"},
+      {:ex_aws_s3, "~> 2.0"},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false}
     ]
   end
