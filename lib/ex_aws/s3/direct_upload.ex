@@ -157,8 +157,22 @@ defmodule ExAws.S3.DirectUpload do
     "#{upload.path}/#{upload.file_name}"
   end
 
-  defp hmac(key, data) do
-    :crypto.hmac(:sha256, key, data)
+  # :crypto.mac/4 is introduced in Erlang/OTP 22.1 and :crypto.hmac/3 is removed
+  # in Erlang/OTP 24. The check is needed for backwards compatibility.
+  # The Code.ensure_loaded/1 call is executed so function_expored?/3 can be used
+  # to determine which function to use.
+
+  Code.ensure_loaded?(:crypto) || IO.warn(":crypto module failed to load")
+  case function_exported?(:crypto, :mac, 4) do
+    true ->
+      defp hmac(key, data) do
+        :crypto.mac(:hmac, :sha256, key, data)
+      end
+
+    false ->
+      defp hmac(key, data) do
+        :crypto.hmac(:sha256, key, data)
+      end
   end
 
   defp security_token(config) do
